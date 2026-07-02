@@ -1,56 +1,52 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'services/tenant_hub_service.dart';
 import 'cubit/event_cubit.dart';
-import 'cubit/booth_cubit.dart';
-import 'pages/home_page.dart';
+import 'pages/splash_page.dart'; // IMPORT DIKEMBALIKAN KE SPLASH PAGE
 import 'services/auth_service.dart';
-
-const String _supabaseUrl = 'https://kyvtwugdgtxdxyeikmlb.supabase.co';
-const String _supabaseAnonKey = 'sb_publishable_KtI053dZkTho6tzbqaC0JQ_-r3Ehvds';
+import 'services/tenant_hub_service.dart';
 
 final sl = GetIt.instance;
 
 Future<void> initDependencies() async {
-  final supabase = await Supabase.initialize(
-    url: _supabaseUrl,
-    publishableKey: _supabaseAnonKey, // <-- Ubah di sini
-  );
-
-  sl.registerLazySingleton<SupabaseClient>(() => supabase.client);
+  sl.registerLazySingleton<SupabaseClient>(() => Supabase.instance.client);
   sl.registerLazySingleton<AuthService>(() => AuthService(sl()));
   sl.registerLazySingleton<TenantHubService>(() => TenantHubService(sl()));
-  sl.registerFactory<EventCubit>(() => EventCubit(sl()));
-  sl.registerFactory<BoothCubit>(() => BoothCubit());
 }
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  await Supabase.initialize(
+    url: 'https://kyvtwugdgtxdxyeikmlb.supabase.co',
+    anonKey: 'sb_publishable_KtI053dZkTho6tzbqaC0JQ_-r3Ehvds',
+  );
+
   await initDependencies();
-  runApp(const TenantHubApp());
+
+  runApp(const MyApp());
 }
 
-class TenantHubApp extends StatelessWidget {
-  const TenantHubApp({super.key});
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
-        BlocProvider(create: (_) => sl<EventCubit>()),
-        BlocProvider(create: (_) => sl<BoothCubit>()),
+        BlocProvider<EventCubit>(create: (context) => EventCubit(sl())),
       ],
       child: MaterialApp(
-        title: 'TenantHub',
         debugShowCheckedModeBanner: false,
+        title: 'TenantHub',
         theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueAccent),
+          colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF673AB7)),
           useMaterial3: true,
         ),
-        home: const HomePage(),
+        // PINTU UTAMA KEMBALI KE SPLASH PAGE (Satpam yang ngecek login)
+        home: const SplashPage(),
       ),
     );
   }

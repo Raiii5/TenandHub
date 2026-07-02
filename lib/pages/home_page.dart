@@ -4,7 +4,6 @@ import '../cubit/event_cubit.dart';
 import '../cubit/event_state.dart';
 import '../models/event_model.dart';
 import 'event_detail_page.dart';
-import 'profile_page.dart'; 
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -14,223 +13,167 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  int _selectedCategoryIndex = 0;
+  final List<String> _categories = [
+    "All Events",
+    "Live Event",
+    "Workshop",
+    "Art Exhibition",
+    "Sports",
+  ];
+
   @override
   void initState() {
     super.initState();
-    _fetchData();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _fetchData();
+    });
   }
 
   Future<void> _fetchData() async {
+    if (!mounted) return;
     await context.read<EventCubit>().fetchEvents();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFAFAFC),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFFFAFAFC),
-        elevation: 0,
-        toolbarHeight: 70,
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              "Halo, Vibe Coder! 👋",
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[600],
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            const SizedBox(height: 4),
-            const Text(
-              "Temukan Event Impianmu",
-              style: TextStyle(
-                color: Color(0xFF1A1A24),
-                fontWeight: FontWeight.w900,
-                fontSize: 20,
-                letterSpacing: 0.2,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          // TOMBOL NOTIFIKASI
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.04),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: IconButton(
-              icon: const Icon(
-                Icons.notifications_none_rounded,
-                color: Color(0xFF673AB7),
-              ),
-              onPressed: () {},
-            ),
-          ),
-          const SizedBox(width: 12),
-
-          // 2. TOMBOL PROFIL BARU (DENGAN NAVIGASI)
-          Container(
-            margin: const EdgeInsets.only(right: 16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.04),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: IconButton(
-              icon: const Icon(
-                Icons.person_outline_rounded,
-                color: Color(0xFF673AB7),
-              ),
-              onPressed: () {
-                // Perintah pindah ke halaman profil
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const ProfilePage()),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
+      backgroundColor: const Color(0xFF673AB7),
       body: RefreshIndicator(
         onRefresh: _fetchData,
         color: const Color(0xFF673AB7),
         child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(
-            parent: BouncingScrollPhysics(),
-          ),
+          physics: const AlwaysScrollableScrollPhysics(),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // SEARCH BAR MODERN
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 10, 20, 24),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF1A1A24).withOpacity(0.04),
-                        blurRadius: 15,
-                        offset: const Offset(0, 8),
+              SafeArea(
+                bottom: false,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Halo, Anrai 👋",
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: 14,
+                            ),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            "Temukan event impianmu",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      CircleAvatar(
+                        radius: 22,
+                        backgroundColor: Colors.grey[300],
+                        backgroundImage: const NetworkImage(
+                          'https://ui-avatars.com/api/?name=Anrai+Harika&background=random',
+                        ),
                       ),
                     ],
-                  ),
-                  child: TextField(
-                    decoration: InputDecoration(
-                      border: InputBorder.none,
-                      hintText: "Cari event atau kampus...",
-                      hintStyle: TextStyle(
-                        color: Colors.grey[400],
-                        fontSize: 15,
-                      ),
-                      icon: const Icon(
-                        Icons.search_rounded,
-                        color: Color(0xFF673AB7),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-
-              // CHIPS FILTER (UI Only)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Row(
-                  children: [
-                    _buildFilterChip("Semua Event", true),
-                    const SizedBox(width: 12),
-                    _buildFilterChip("Terdekat", false),
-                    const SizedBox(width: 12),
-                    _buildFilterChip("Populer", false),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              // SECTION TITLE
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20),
-                child: Text(
-                  "Event Tersedia",
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFF1A1A24),
                   ),
                 ),
               ),
               const SizedBox(height: 16),
-
-              // EVENT LIST DENGAN CARD MODERN
-              BlocBuilder<EventCubit, EventState>(
-                builder: (context, state) {
-                  if (state is EventLoading) {
-                    return const Center(
-                      child: Padding(
-                        padding: EdgeInsets.only(top: 40),
-                        child: CircularProgressIndicator(
-                          color: Color(0xFF673AB7),
-                        ),
-                      ),
-                    );
-                  }
-                  if (state is EventError) {
-                    return Center(
-                      child: Text(
-                        "Error: ${state.message}",
-                        style: const TextStyle(color: Colors.red),
-                      ),
-                    );
-                  }
-                  if (state is EventLoaded) {
-                    if (state.events.isEmpty) {
-                      return const Center(
-                        child: Padding(
-                          padding: EdgeInsets.only(top: 40),
-                          child: Text(
-                            "Belum ada event saat ini.",
-                            style: TextStyle(color: Colors.grey),
-                          ),
-                        ),
-                      );
-                    }
-                    return ListView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      itemCount: state.events.length,
-                      itemBuilder: (context, index) {
-                        return _EventCard(event: state.events[index]);
-                      },
-                    );
-                  }
-                  return const SizedBox.shrink();
-                },
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  child: TextField(
+                    decoration: InputDecoration(
+                      border: InputBorder.none,
+                      hintText: "Search event...",
+                      hintStyle: TextStyle(color: Colors.grey[400]),
+                      icon: Icon(Icons.search, color: Colors.grey[400]),
+                    ),
+                  ),
+                ),
               ),
-              const SizedBox(height: 40),
+              const SizedBox(height: 24),
+              SizedBox(
+                height: 40,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  itemCount: _categories.length,
+                  itemBuilder: (context, index) {
+                    final isActive = index == _selectedCategoryIndex;
+                    return GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _selectedCategoryIndex = index;
+                        });
+                      },
+                      child: Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 12),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Text(
+                              _categories[index],
+                              style: TextStyle(
+                                color: isActive ? Colors.white : Colors.white54,
+                                fontWeight: isActive
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                                fontSize: 15,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            if (isActive)
+                              Container(
+                                height: 2,
+                                width: 30,
+                                color: Colors.white,
+                              ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: 16),
+              Container(
+                width: double.infinity,
+                decoration: const BoxDecoration(
+                  color: Color(0xFFFAFAFC),
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(32),
+                    topRight: Radius.circular(32),
+                  ),
+                ),
+                padding: const EdgeInsets.only(top: 24, bottom: 40),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildSectionHeader("NEAREST EVENT"),
+                    const SizedBox(height: 16),
+                    _buildEventList(),
+                    const SizedBox(height: 32),
+                    _buildSectionHeader("RECOMMENDED EVENTS"),
+                    const SizedBox(height: 16),
+                    _buildEventList(),
+                  ],
+                ),
+              ),
             ],
           ),
         ),
@@ -238,23 +181,70 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildFilterChip(String label, bool isActive) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: isActive ? const Color(0xFF673AB7) : Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: isActive ? Colors.transparent : Colors.grey[300]!,
-        ),
+  Widget _buildSectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              color: Colors.black87,
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1.2,
+            ),
+          ),
+          Text(
+            "See All",
+            style: TextStyle(
+              color: Colors.grey[500],
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
       ),
-      child: Text(
-        label,
-        style: TextStyle(
-          color: isActive ? Colors.white : Colors.grey[600],
-          fontWeight: FontWeight.bold,
-          fontSize: 13,
-        ),
+    );
+  }
+
+  Widget _buildEventList() {
+    return SizedBox(
+      height: 290,
+      child: BlocBuilder<EventCubit, EventState>(
+        builder: (context, state) {
+          if (state is EventLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (state is EventError) {
+            return Center(
+              child: Text(
+                "Error: ${state.message}",
+                style: const TextStyle(color: Colors.red),
+              ),
+            );
+          }
+          if (state is EventLoaded) {
+            if (state.events.isEmpty) {
+              return const Center(
+                child: Text(
+                  "Belum ada event.",
+                  style: TextStyle(color: Colors.grey),
+                ),
+              );
+            }
+            return ListView.builder(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              itemCount: state.events.length,
+              itemBuilder: (context, index) {
+                return _EventCard(event: state.events[index]);
+              },
+            );
+          }
+          return const SizedBox.shrink();
+        },
       ),
     );
   }
@@ -267,23 +257,7 @@ class _EventCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const List<String> monthNames = [
-      "Jan",
-      "Feb",
-      "Mar",
-      "Apr",
-      "Mei",
-      "Jun",
-      "Jul",
-      "Agt",
-      "Sep",
-      "Okt",
-      "Nov",
-      "Des",
-    ];
-
     return GestureDetector(
-      behavior: HitTestBehavior.opaque,
       onTap: () {
         Navigator.push(
           context,
@@ -293,124 +267,112 @@ class _EventCard extends StatelessWidget {
         );
       },
       child: Container(
-        margin: const EdgeInsets.only(bottom: 16),
+        width: 220,
+        margin: const EdgeInsets.only(right: 16, bottom: 8),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF1A1A24).withOpacity(0.04),
-              blurRadius: 15,
-              offset: const Offset(0, 6),
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            // DATE BADGE
-            Container(
-              width: 60,
-              height: 75,
-              decoration: BoxDecoration(
-                color: const Color(0xFF673AB7).withOpacity(0.08),
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Stack(
                 children: [
-                  Text(
-                    event.date.day.toString(),
-                    style: const TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w900,
-                      color: Color(0xFF673AB7),
-                      height: 1.1,
+                  Container(
+                    height: 140,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      color: Colors.grey[200],
+                      image: const DecorationImage(
+                        image: NetworkImage(
+                          'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=400&auto=format&fit=crop',
+                        ),
+                        fit: BoxFit.cover,
+                      ),
                     ),
                   ),
-                  Text(
-                    monthNames[event.date.month - 1],
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF673AB7),
+                  Positioned(
+                    top: 8,
+                    left: 8,
+                    child: Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.4),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(
+                        Icons.bookmark_border,
+                        color: Colors.white,
+                        size: 18,
+                      ),
                     ),
                   ),
                 ],
               ),
-            ),
-            const SizedBox(width: 16),
-
-            // EVENT INFO
-            Expanded(
-              child: Column(
+              const SizedBox(height: 12),
+              const Text(
+                "EVENT",
+                style: TextStyle(
+                  color: Color(0xFFD6A054),
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.0,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          event.title,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w800,
-                            color: Color(0xFF1A1A24),
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                  Expanded(
+                    child: Text(
+                      event.title,
+                      style: const TextStyle(
+                        color: Colors.black87,
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
                       ),
-                      Container(
-                        margin: const EdgeInsets.only(left: 8),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.green[50],
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.green[200]!),
-                        ),
-                        child: const Text(
-                          "Tersedia",
-                          style: TextStyle(
-                            color: Colors.green,
-                            fontSize: 10,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ),
-                    ],
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.location_on_rounded,
-                        size: 14,
-                        color: Colors.grey[400],
-                      ),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: Text(
-                          event.location,
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: Colors.grey[600],
-                            fontWeight: FontWeight.w500,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
+                  const SizedBox(width: 8),
+                  const Text(
+                    "Rp 0",
+                    style: TextStyle(
+                      color: Colors.black87,
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ],
               ),
-            ),
-          ],
+              const Spacer(),
+              Row(
+                children: [
+                  Icon(Icons.location_on, size: 14, color: Colors.grey[400]),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      event.location,
+                      style: TextStyle(color: Colors.grey[500], fontSize: 11),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

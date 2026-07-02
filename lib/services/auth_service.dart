@@ -35,7 +35,7 @@ class AuthService {
       );
       return response;
     } catch (e) {
-      throw Exception('Email atau password salah!');
+      throw Exception("ERROR SUPABASE: ${e.toString()}");
     }
   }
 

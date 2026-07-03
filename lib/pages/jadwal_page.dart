@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import '../models/event_model.dart';
+import '../services/dummy_booking.dart';
+import 'event_detail_page.dart';
 
 class JadwalPage extends StatefulWidget {
   const JadwalPage({super.key});
@@ -11,17 +14,22 @@ class _JadwalPageState extends State<JadwalPage> {
   int _selectedDateIndex = 0;
 
   final List<Map<String, String>> _dates = [
-    {"day": "Mon", "date": "23"},
-    {"day": "Tue", "date": "24"},
-    {"day": "Wed", "date": "25"},
-    {"day": "Thu", "date": "26"},
-    {"day": "Fri", "date": "27"},
-    {"day": "Sat", "date": "28"},
-    {"day": "Sun", "date": "29"},
+    {"day": "Fri", "date": "03", "fullDate": "03 Jul 2026"},
+    {"day": "Sat", "date": "04", "fullDate": "04 Jul 2026"},
+    {"day": "Sun", "date": "05", "fullDate": "05 Jul 2026"},
+    {"day": "Mon", "date": "06", "fullDate": "06 Jul 2026"},
+    {"day": "Tue", "date": "07", "fullDate": "07 Jul 2026"},
+    {"day": "Wed", "date": "08", "fullDate": "08 Jul 2026"},
+    {"day": "Thu", "date": "09", "fullDate": "09 Jul 2026"},
   ];
 
   @override
   Widget build(BuildContext context) {
+    String selectedFullDate = _dates[_selectedDateIndex]["fullDate"]!;
+    List<Map<String, dynamic>> dailyEvents = DummyBooking.allEvents
+        .where((e) => e["date"] == selectedFullDate)
+        .toList();
+
     return Scaffold(
       backgroundColor: const Color(0xFFFAFAFC),
       body: Column(
@@ -47,18 +55,7 @@ class _JadwalPageState extends State<JadwalPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Padding(
-                    padding: EdgeInsets.fromLTRB(24, 20, 24, 16),
-                    child: Text(
-                      "Jadwal Event",
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w900,
-                        color: Color(0xFF1A1A24),
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                  ),
+                  const SizedBox(height: 32),
                   SizedBox(
                     height: 85,
                     child: ListView.builder(
@@ -68,16 +65,13 @@ class _JadwalPageState extends State<JadwalPage> {
                       itemBuilder: (context, index) {
                         final isSelected = _selectedDateIndex == index;
                         return GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              _selectedDateIndex = index;
-                            });
-                          },
+                          onTap: () =>
+                              setState(() => _selectedDateIndex = index),
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 200),
-                            width: 50,
+                            width: 60,
                             margin: const EdgeInsets.symmetric(
-                              horizontal: 4,
+                              horizontal: 6,
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
@@ -106,7 +100,7 @@ class _JadwalPageState extends State<JadwalPage> {
                                 Text(
                                   _dates[index]["day"]!,
                                   style: TextStyle(
-                                    fontSize: 11,
+                                    fontSize: 12,
                                     fontWeight: FontWeight.w700,
                                     color: isSelected
                                         ? Colors.white70
@@ -117,7 +111,7 @@ class _JadwalPageState extends State<JadwalPage> {
                                 Text(
                                   _dates[index]["date"]!,
                                   style: TextStyle(
-                                    fontSize: 16,
+                                    fontSize: 18,
                                     fontWeight: FontWeight.w900,
                                     color: isSelected
                                         ? Colors.white
@@ -131,121 +125,169 @@ class _JadwalPageState extends State<JadwalPage> {
                       },
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 20),
                 ],
               ),
             ),
           ),
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-              itemCount: 4,
-              itemBuilder: (context, index) {
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 20),
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(24),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.03),
-                        blurRadius: 15,
-                        offset: const Offset(0, 8),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        "Bazaar Kuliah Akhir Semester",
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w800,
-                          color: Color(0xFF1A1A24),
+            child: dailyEvents.isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.event_busy_rounded,
+                          size: 64,
+                          color: Colors.grey[300],
                         ),
-                      ),
-                      const SizedBox(height: 10),
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.location_on,
-                            size: 16,
+                        const SizedBox(height: 16),
+                        Text(
+                          "Tidak ada event di tanggal ini",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
                             color: Colors.grey[400],
                           ),
-                          const SizedBox(width: 6),
-                          Text(
-                            "Auditorium UNPAM VIKTOR",
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: Colors.grey[600],
-                              fontWeight: FontWeight.w500,
+                        ),
+                      ],
+                    ),
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 24,
+                    ),
+                    itemCount: dailyEvents.length,
+                    itemBuilder: (context, index) {
+                      final evt = dailyEvents[index];
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 20),
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(24),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.03),
+                              blurRadius: 15,
+                              offset: const Offset(0, 8),
                             ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 8,
-                            ),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFFAFAFC),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text(
-                              "Friday, 27 Dec 2026",
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.grey[700],
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              evt["title"],
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w800,
+                                color: Color(0xFF1A1A24),
                               ),
                             ),
-                          ),
-                          const Text(
-                            "Gratis",
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w900,
-                              color: Color(0xFF1A1A24),
+                            const SizedBox(height: 10),
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.location_on,
+                                  size: 16,
+                                  color: Colors.grey[400],
+                                ),
+                                const SizedBox(width: 6),
+                                Expanded(
+                                  child: Text(
+                                    evt["location"],
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: Colors.grey[600],
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
-                      SizedBox(
-                        width: double.infinity,
-                        height: 48,
-                        child: ElevatedButton(
-                          onPressed: () {},
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF673AB7),
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
+                            const SizedBox(height: 16),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 8,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFFAFAFC),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Text(
+                                    evt["date"],
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w700,
+                                      color: Colors.grey[700],
+                                    ),
+                                  ),
+                                ),
+                                Text(
+                                  "Detail >",
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w900,
+                                    color: const Color(
+                                      0xFF673AB7,
+                                    ).withOpacity(0.8),
+                                  ),
+                                ),
+                              ],
                             ),
-                            elevation: 0,
-                          ),
-                          child: const Text(
-                            "Detail Jadwal",
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 0.5,
+                            const SizedBox(height: 20),
+                            SizedBox(
+                              width: double.infinity,
+                              height: 48,
+                              child: ElevatedButton(
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => EventDetailPage(
+                                        event: EventModel(
+                                          id: evt["id"],
+                                          title: evt["title"],
+                                          date: DateTime.now(),
+                                          location: evt["location"],
+                                          eoId: "eo_dummy_123",
+                                        ),
+                                        imageUrl: evt["image"],
+                                        basePrice: evt["price"],
+                                        eventDate: evt["date"],
+                                      ),
+                                    ),
+                                  );
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF673AB7),
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  elevation: 0,
+                                ),
+                                child: const Text(
+                                  "Detail Jadwal",
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                              ),
                             ),
-                          ),
+                          ],
                         ),
-                      ),
-                    ],
+                      );
+                    },
                   ),
-                );
-              },
-            ),
           ),
         ],
       ),

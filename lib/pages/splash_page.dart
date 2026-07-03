@@ -19,7 +19,10 @@ class _SplashPageState extends State<SplashPage> {
     });
   }
 
-  void _checkAuth() {
+  void _checkAuth() async {
+    await Future.delayed(const Duration(milliseconds: 500));
+    if (!mounted) return;
+
     final session = Supabase.instance.client.auth.currentSession;
     if (session != null) {
       Navigator.of(context).pushReplacement(

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'dart:math';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:url_launcher/url_launcher.dart';
 import '../models/event_model.dart';
 import '../models/ticket_model.dart';
 import '../cubit/ticket_cubit.dart';
@@ -33,210 +36,82 @@ class _EventDetailPageState extends State<EventDetailPage> {
     });
   }
 
-  void _showPaymentBottomSheet() {
-    if (_selectedBooth == null) return;
-    String selectedPayment = "QRIS";
-
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            return Container(
-              padding: const EdgeInsets.all(24),
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(32),
-                  topRight: Radius.circular(32),
-                ),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Center(
-                    child: Container(
-                      width: 40,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: Colors.grey[300],
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  const Text(
-                    "Metode Pembayaran",
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w900,
-                      color: Color(0xFF1A1A24),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  _buildPaymentOption(
-                    "QRIS",
-                    Icons.qr_code_2_rounded,
-                    selectedPayment,
-                    () => setModalState(() => selectedPayment = "QRIS"),
-                  ),
-                  _buildPaymentOption(
-                    "Virtual Account (VA)",
-                    Icons.account_balance_rounded,
-                    selectedPayment,
-                    () => setModalState(
-                      () => selectedPayment = "Virtual Account (VA)",
-                    ),
-                  ),
-                  _buildPaymentOption(
-                    "E-Wallet",
-                    Icons.account_balance_wallet_rounded,
-                    selectedPayment,
-                    () => setModalState(() => selectedPayment = "E-Wallet"),
-                  ),
-                  const SizedBox(height: 32),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () => Navigator.pop(context),
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            side: const BorderSide(color: Colors.red),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                          ),
-                          child: const Text(
-                            "Batal",
-                            style: TextStyle(
-                              color: Colors.red,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: () => _processTransaction(selectedPayment),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF673AB7),
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            elevation: 0,
-                          ),
-                          child: const Text(
-                            "Bayar",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
-  Widget _buildPaymentOption(
-    String title,
-    IconData icon,
-    String selected,
-    VoidCallback onTap,
-  ) {
-    bool isSelected = title == selected;
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? const Color(0xFF673AB7).withOpacity(0.05)
-              : Colors.white,
-          border: Border.all(
-            color: isSelected ? const Color(0xFF673AB7) : Colors.grey[200]!,
-          ),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              icon,
-              color: isSelected ? const Color(0xFF673AB7) : Colors.grey[400],
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Text(
-                title,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                  color: isSelected ? const Color(0xFF673AB7) : Colors.black87,
-                ),
-              ),
-            ),
-            if (isSelected)
-              const Icon(Icons.check_circle_rounded, color: Color(0xFF673AB7)),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Future<void> _processTransaction(String paymentMethod) async {
+  Future<void> _processTransaction() async {
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) =>
           const Center(child: CircularProgressIndicator(color: Colors.white)),
     );
-    await Future.delayed(const Duration(seconds: 2));
-    if (!mounted) return;
-    Navigator.pop(context);
-    Navigator.pop(context);
 
-    String orderId = "ORD-${Random().nextInt(900000) + 100000}";
-    String trxId = "${Random().nextInt(90000) + 10000}";
+    try {
+      String orderId = "ORD-${DateTime.now().millisecondsSinceEpoch}";
+      int price = _selectedBooth!["price"];
 
-    final newTicket = TicketModel(
-      id: orderId,
-      trxId: trxId,
-      title: widget.event.title,
-      date: widget.eventDate,
-      time: "08:00 WIB",
-      location: widget.event.location,
-      image: widget.imageUrl,
-      boothName: _selectedBooth!["name"],
-      price:
-          "Rp ${_selectedBooth!["price"].toString().replaceAll(RegExp(r'\B(?=(\d{3})+(?!\d))'), '.')}",
-      status: "Berhasil",
-      paymentMethod: paymentMethod,
-    );
+      final payload = {
+        "order_id": orderId,
+        "gross_amount": price,
+        "item_name": "${_selectedBooth!["name"]} - ${widget.event.title}",
+        "customer_name": "Anrai Harika",
+        "customer_email": "anrai0505@gmail.com",
+      };
 
-    context.read<TicketCubit>().addTicket(newTicket);
+      final response = await http.post(
+        Uri.parse(
+          'https://kyvtwugdgtxdxyeikmlb.supabase.co/functions/v1/midtrans-snap',
+        ),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(payload),
+      );
 
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const MainScreen(initialIndex: 2),
-      ),
-      (route) => false,
-    );
+      if (!mounted) return;
+      Navigator.pop(context);
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final String redirectUrl = data['redirect_url'];
+        final Uri url = Uri.parse(redirectUrl);
+
+        await launchUrl(url, mode: LaunchMode.inAppWebView);
+
+        String trxId = "${Random().nextInt(90000) + 10000}";
+        final newTicket = TicketModel(
+          id: orderId,
+          trxId: trxId,
+          title: widget.event.title,
+          date: widget.eventDate,
+          time: "08:00 WIB",
+          location: widget.event.location,
+          image: widget.imageUrl,
+          boothName: _selectedBooth!["name"],
+          price:
+              "Rp ${price.toString().replaceAll(RegExp(r'\B(?=(\d{3})+(?!\d))'), '.')}",
+          status: "Berhasil",
+          paymentMethod: "Midtrans Gateway",
+        );
+
+        context.read<TicketCubit>().addTicket(newTicket);
+
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const MainScreen(initialIndex: 2),
+          ),
+          (route) => false,
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal membuat tagihan: ${response.body}')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Terjadi kesalahan: $e')));
+      }
+    }
   }
 
   @override
@@ -386,7 +261,7 @@ class _EventDetailPageState extends State<EventDetailPage> {
                 child: ElevatedButton(
                   onPressed: _selectedBooth == null
                       ? null
-                      : _showPaymentBottomSheet,
+                      : _processTransaction,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF673AB7),
                     disabledBackgroundColor: Colors.grey[300],

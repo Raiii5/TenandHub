@@ -2,11 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'login_page.dart';
 import 'main_screen.dart';
-import 'profile_detail_page.dart';
-import 'settings_page.dart';
+import 'data_diri_page.dart';
+import 'pengaturan_akun_page.dart';
 
-class ProfilePage extends StatelessWidget {
+class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
+
+  @override
+  State<ProfilePage> createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends State<ProfilePage> {
+  String _nama = "Anrai Harika Harpan";
+  String _email = "anrai0505@gmail.com";
 
   void _logout(BuildContext context) async {
     await Supabase.instance.client.auth.signOut();
@@ -28,10 +36,23 @@ class ProfilePage extends StatelessWidget {
           child: Column(
             children: [
               GestureDetector(
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const ProfileDetailPage()),
-                ),
+                onTap: () async {
+                  final result = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => DataDiriPage(
+                        currentNama: _nama,
+                        currentEmail: _email,
+                      ),
+                    ),
+                  );
+                  if (result != null) {
+                    setState(() {
+                      _nama = result['nama'];
+                      _email = result['email'];
+                    });
+                  }
+                },
                 child: Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
@@ -61,22 +82,22 @@ class ProfilePage extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 16),
-                      const Expanded(
+                      Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              "Anrai Harika",
-                              style: TextStyle(
+                              _nama,
+                              style: const TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.w900,
                                 color: Color(0xFF1A1A24),
                               ),
                             ),
-                            SizedBox(height: 4),
+                            const SizedBox(height: 4),
                             Text(
-                              "anrai@example.com",
-                              style: TextStyle(
+                              _email,
+                              style: const TextStyle(
                                 fontSize: 14,
                                 color: Colors.grey,
                               ),
@@ -146,7 +167,7 @@ class ProfilePage extends StatelessWidget {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => const SettingsPage(),
+                            builder: (_) => const PengaturanAkunPage(),
                           ),
                         );
                       },
